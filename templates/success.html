@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Added — Smart Expense Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="header">
+        <h1>Smart Expense Tracker</h1>
+    </div>
+
+    <div class="success-card">
+        <span class="success-icon">&#10003;</span>
+        <h2>Expense added</h2>
+        <p style="color: var(--text-faint); margin: 10px 0 22px;">Saved to your records.</p>
+        <a href="/">
+            <button>&larr; Dashboard</button>
+        </a>
+        <a href="/add">
+            <button class="btn-outline">Add another</button>
+        </a>
+    </div>
+
+    <footer>Smart Expense Tracker &copy; 2026</footer>
+
+</body>
+</html>

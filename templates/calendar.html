@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar View — Smart Expense Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="header">
+        <h1>Smart Expense Tracker</h1>
+    </div>
+
+    <div class="page-title">
+        <h2>Calendar View</h2>
+        <p class="page-subtitle">Track and browse your daily expenditures</p>
+    </div>
+
+    <div class="calendar-layout">
+        <!-- Calendar Grid Card -->
+        <div class="calendar-card">
+            <div class="calendar-ctrl">
+                <button type="button" class="calendar-ctrl-btn" id="prevMonthBtn">&larr;</button>
+                <h3 id="currentMonthYear">June 2026</h3>
+                <button type="button" class="calendar-ctrl-btn" id="nextMonthBtn">&rarr;</button>
+            </div>
+
+            <div class="calendar-grid-header">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+            </div>
+
+            <div class="calendar-grid-days" id="calendarDaysGrid">
+                <!-- Populated dynamically via JS -->
+            </div>
+        </div>
+
+        <!-- Expense Details Card -->
+        <div class="cal-details-card">
+            <div class="cal-details-header">
+                <h3 id="selectedDateTitle">Select a date</h3>
+                <p id="selectedDateTotal">Daily Total: ₹0.00</p>
+            </div>
+            <div class="cal-details-list" id="calendarDetailsList">
+                <div class="cal-details-empty">Click a calendar day with expenses to view details</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-bottom">
+        <a href="/">
+            <button class="btn-outline">&larr; Back to Dashboard</button>
+        </a>
+    </div>
+
+    <footer>Smart Expense Tracker &copy; 2026</footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let expenses = [];
+            let currentMonthDate = new Date(); // Represents current month and year focus
+            let selectedDateStr = null;
+
+            const months = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+
+            const grid = document.getElementById('calendarDaysGrid');
+            const monthYearTitle = document.getElementById('currentMonthYear');
+            const detailsTitle = document.getElementById('selectedDateTitle');
+            const detailsTotal = document.getElementById('selectedDateTotal');
+            const detailsList = document.getElementById('calendarDetailsList');
+
+            // Fetch expense data
+            fetch('/api/expenses')
+                .then(response => response.json())
+                .then(data => {
+                    expenses = data;
+                    
+                    // Format today as YYYY-MM-DD
+                    const today = new Date();
+                    selectedDateStr = formatDateStr(today);
+                    currentMonthDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    
+                    renderCalendar();
+                    showDateExpenses(selectedDateStr);
+                })
+                .catch(err => {
+                    console.error("Error loading expenses:", err);
+                    renderCalendar();
+                });
+
+            // Handle Navigation
+            document.getElementById('prevMonthBtn').addEventListener('click', () => {
+                currentMonthDate.setMonth(currentMonthDate.getMonth() - 1);
+                renderCalendar();
+            });
+
+            document.getElementById('nextMonthBtn').addEventListener('click', () => {
+                currentMonthDate.setMonth(currentMonthDate.getMonth() + 1);
+                renderCalendar();
+            });
+
+            // Format Date object to YYYY-MM-DD in local time
+            function formatDateStr(dateObj) {
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            // Parse YYYY-MM-DD to readable Date in local time
+            function formatReadableDate(dateStr) {
+                const parts = dateStr.split('-');
+                if (parts.length !== 3) return dateStr;
+                const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+
+            // Map expenses to a fast-lookup object grouped by date
+            function getExpensesMap() {
+                const map = {};
+                expenses.forEach(exp => {
+                    // DB date format is usually YYYY-MM-DD, clean up just in case
+                    const dateKey = exp.date.split(' ')[0]; 
+                    if (!map[dateKey]) {
+                        map[dateKey] = [];
+                    }
+                    map[dateKey].push(exp);
+                });
+                return map;
+            }
+
+            // Render monthly calendar grid
+            function renderCalendar() {
+                grid.innerHTML = '';
+                const year = currentMonthDate.getFullYear();
+                const month = currentMonthDate.getMonth();
+
+                monthYearTitle.textContent = `${months[month]} ${year}`;
+
+                // Fetch mapped expenses
+                const expensesMap = getExpensesMap();
+
+                // First day of current month
+                const firstDayIndex = new Date(year, month, 1).getDay();
+
+                // Total days in current month
+                const totalDays = new Date(year, month + 1, 0).getDate();
+
+                // Total days in previous month
+                const prevTotalDays = new Date(year, month, 0).getDate();
+
+                // Build days array (total 42 cells for standard grid)
+                const cells = [];
+
+                // 1. Trailing days from previous month
+                for (let i = firstDayIndex - 1; i >= 0; i--) {
+                    const prevDay = prevTotalDays - i;
+                    const prevMonth = month === 0 ? 11 : month - 1;
+                    const prevYear = month === 0 ? year - 1 : year;
+                    cells.push({
+                        dayNum: prevDay,
+                        dateStr: formatDateStr(new Date(prevYear, prevMonth, prevDay)),
+                        isCurrentMonth: false
+                    });
+                }
+
+                // 2. Days of current month
+                for (let day = 1; day <= totalDays; day++) {
+                    cells.push({
+                        dayNum: day,
+                        dateStr: formatDateStr(new Date(year, month, day)),
+                        isCurrentMonth: true
+                    });
+                }
+
+                // 3. Leading days of next month to complete the 42 cells
+                const remainingCells = 42 - cells.length;
+                for (let day = 1; day <= remainingCells; day++) {
+                    const nextMonth = month === 11 ? 0 : month + 1;
+                    const nextYear = month === 11 ? year + 1 : year;
+                    cells.push({
+                        dayNum: day,
+                        dateStr: formatDateStr(new Date(nextYear, nextMonth, day)),
+                        isCurrentMonth: false
+                    });
+                }
+
+                // Render cells to DOM
+                const todayStr = formatDateStr(new Date());
+
+                cells.forEach(cell => {
+                    const cellEl = document.createElement('div');
+                    cellEl.className = 'calendar-day-cell';
+                    
+                    if (!cell.isCurrentMonth) {
+                        cellEl.classList.add('other-month');
+                    } else {
+                        if (cell.dateStr === todayStr) {
+                            cellEl.classList.add('today');
+                        }
+                        if (cell.dateStr === selectedDateStr) {
+                            cellEl.classList.add('selected');
+                        }
+                    }
+
+                    // Day number label
+                    const numEl = document.createElement('div');
+                    numEl.className = 'calendar-day-num';
+                    numEl.textContent = cell.dayNum;
+                    cellEl.appendChild(numEl);
+
+                    // If cell is current month, check for expenses
+                    if (cell.isCurrentMonth) {
+                        const dayExpenses = expensesMap[cell.dateStr] || [];
+                        if (dayExpenses.length > 0) {
+                            const sum = dayExpenses.reduce((tot, exp) => tot + Number(exp.amount), 0);
+                            const sumEl = document.createElement('div');
+                            sumEl.className = 'calendar-day-sum';
+                            sumEl.textContent = `₹${sum.toFixed(0)}`;
+                            cellEl.appendChild(sumEl);
+                        }
+
+                        // Event listener
+                        cellEl.addEventListener('click', () => {
+                            // Update selection
+                            document.querySelectorAll('.calendar-day-cell').forEach(el => {
+                                el.classList.remove('selected');
+                            });
+                            cellEl.classList.add('selected');
+                            
+                            selectedDateStr = cell.dateStr;
+                            showDateExpenses(cell.dateStr);
+                        });
+                    }
+
+                    grid.appendChild(cellEl);
+                });
+            }
+
+            // Show date expense breakdown details
+            function showDateExpenses(dateStr) {
+                const expensesMap = getExpensesMap();
+                const dayExpenses = expensesMap[dateStr] || [];
+
+                detailsTitle.textContent = formatReadableDate(dateStr);
+                
+                detailsList.innerHTML = '';
+
+                if (dayExpenses.length === 0) {
+                    detailsTotal.textContent = "Daily Total: ₹0.00";
+                    detailsList.innerHTML = `<div class="cal-details-empty">No expenses logged for this day.</div>`;
+                    return;
+                }
+
+                const sum = dayExpenses.reduce((tot, exp) => tot + Number(exp.amount), 0);
+                detailsTotal.textContent = `Daily Total: ₹${sum.toFixed(2)}`;
+
+                dayExpenses.forEach(exp => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'cal-details-item';
+
+                    const leftEl = document.createElement('div');
+                    leftEl.className = 'cal-details-left';
+
+                    const catEl = document.createElement('div');
+                    catEl.className = 'cal-details-cat';
+                    catEl.textContent = exp.category;
+
+                    const descEl = document.createElement('div');
+                    descEl.className = 'cal-details-desc';
+                    descEl.textContent = exp.description || 'No description';
+
+                    leftEl.appendChild(catEl);
+                    leftEl.appendChild(descEl);
+
+                    const amountEl = document.createElement('div');
+                    amountEl.className = 'cal-details-amount';
+                    amountEl.textContent = `₹${Number(exp.amount).toFixed(2)}`;
+
+                    itemEl.appendChild(leftEl);
+                    itemEl.appendChild(amountEl);
+
+                    detailsList.appendChild(itemEl);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
