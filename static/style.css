@@ -157,3 +157,13 @@ footer{
     max-width:600px;
     border-radius:10px;
 }
+.summary-filter{
+    margin-bottom:20px;
+}
+
+.summary-filter select{
+    padding:10px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    margin:0 5px;
+}

@@ -149,44 +149,39 @@ def summary():
 
     df = pd.read_sql_query("SELECT * FROM expenses", conn)
     df["date"] = pd.to_datetime(df["date"])
-    today = pd.Timestamp.today()
-    year_name = today.year
-    month_name = today.strftime("%B %Y")
-    week_name = f"Week {today.isocalendar().week} ({today.year})"
-    week_data = df[
-    (df["date"].dt.isocalendar().week == today.isocalendar().week) &
-    (df["date"].dt.year == today.year)
-     ]
+    selected_year = request.args.get("year")
+    selected_month = request.args.get("month")
+    years = sorted(df["date"].dt.year.unique())
+    if selected_year:
+      df = df[df["date"].dt.year == int(selected_year)]
 
-    week_total = week_data["amount"].sum()
-    month_data = df[
-    (df["date"].dt.month == today.month) &
-    (df["date"].dt.year == today.year)
-     ]
-
-    month_total = month_data["amount"].sum()
-
-# Current year
-    year_data = df[
-    df["date"].dt.year == today.year
-     ]
-    year_total = year_data["amount"].sum()
-    
-    
+    if selected_month:
+     df = df[df["date"].dt.month == int(selected_month)]
+     
     
     conn.close()
 
     if df.empty:
-        return "No expense data available."
-
-    total_expense = np.sum(df["amount"])
-    average_transaction = round(df["amount"].mean(), 2)
-
-    highest_category = (
+        total_expense = 0
+        average_transaction = 0
+        highest_category = "No Data"
+          
+    total_expense = round(df["amount"].sum(), 2)
+    if not df.empty:
+     highest_category = (
         df.groupby("category")["amount"]
         .sum()
         .idxmax()
     )
+    else:
+     highest_category = "No Data"
+    
+    average_transaction = (
+    round(df["amount"].mean(), 2)
+    if not df.empty
+    else 0
+)
+
 
     # Generate chart
     df["category"] = df["category"].str.title()
@@ -205,13 +200,13 @@ def summary():
 
     return render_template(
     "summary.html",
-    year_total=year_total,
-    month_total=month_total,
-    week_total=week_total,
-    year_name=year_name,
-    month_name=month_name,
-    week_name=week_name,
-    category=highest_category
+    total_expense=total_expense,
+    average_transaction=average_transaction,
+    category=highest_category,
+    years=years,
+    selected_year=selected_year,
+    selected_month=selected_month,
+    no_data=False if not df.empty else True
 )
     
 if __name__ == "__main__":
