@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Expense Summary</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="header">
+    <h1>Smart Expense Tracker</h1>
+</div>
+<h1>Expense Summary</h1>
+<div class="summary-container">
+
+    <div class="summary-card">
+        <h3>{{ week_name }}</h3>
+        <p>₹ {{ week_total }}</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>{{ month_name }}</h3>
+        <p>₹ {{ month_total }}</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>Year {{ year_name }}</h3>
+        <p>₹ {{ year_total }}</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>Top Category</h3>
+        <p>{{ category }}</p>
+    </div>
+
+</div>
+
+
+<div class="chart-card">
+    <img src="{{ url_for('static', filename='chart.png') }}"
+         alt="Expense Chart">
+
+</div>
+<br><br>
+
+    <a href="/">
+    <button>Back to Home</button>
+    </a>
+
+<footer>
+    Smart Expense Tracker © 2026
+</footer>
+</body>
+</html>

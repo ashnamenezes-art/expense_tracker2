@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Expenses</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="header">
+      <h1>Smart Expense Tracker</h1>
+    </div>
+
+    <div class="card">
+
+    <h2>All Expenses</h2>
+    <form class="search-form" method="GET" action="/view">
+    <input type="text"
+           name="search"
+           placeholder="Search by category or description...">
+        <br><br>
+    <button type="submit">Search</button>
+     <a href="/view">
+        <button type="button">Show All</button>
+    </a>
+
+    </form>
+<br>
+
+<br>
+
+    <table border="1" cellpadding="10">
+
+        <tr>
+            <th>ID</th>
+            <th>Amount</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Action</th>
+        </tr>
+
+     {% for row in data %}
+        <tr>
+           <td>{{ loop.index }}</td>
+           <td>{{ row[1] }}</td>
+           <td>{{ row[2] }}</td>
+           <td>{{ row[3] }}</td>
+           <td>{{ row[4] }}</td>
+
+        <td>
+         <a href="/delete/{{ row[0] }}">
+           <button>Delete</button>
+         </a>
+        </td>
+        </tr>
+{% endfor %}
+    </table>
+
+    <br>
+    
+    <a href="/">
+    <button>Back to Home</button>
+    </a>
+
+    </div>
+
+<footer>
+    Smart Expense Tracker © 2026
+</footer>
+</body>
+</html>
