@@ -1,25 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Expense Tracker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Expense Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-   <div class="header">
+
+    <div class="header">
         <h1>Smart Expense Tracker</h1>
     </div>
 
-    <a href="/add">
-        <button>Add Expense</button>
-    </a>
+    <div class="dash-wrap">
+        <h2>Dashboard</h2>
+        <p class="dash-subtitle">What would you like to do?</p>
 
-    <a href="/view">
-        <button>View Expenses</button>
-    </a>
+        <div class="dash-grid">
+            <a href="/add">
+                <div class="dash-card">
+                    <span class="dash-card-icon">+</span>
+                    <div class="dash-card-title">Add Expense</div>
+                    <div class="dash-card-desc">Log a new transaction</div>
+                </div>
+            </a>
 
-    <a href="/summary">
-        <button>Expense Analytics</button>
-    </a>
+            <a href="/view">
+                <div class="dash-card">
+                    <span class="dash-card-icon">≡</span>
+                    <div class="dash-card-title">View Expenses</div>
+                    <div class="dash-card-desc">Browse all records</div>
+                </div>
+            </a>
+
+            <a href="/summary">
+                <div class="dash-card">
+                    <span class="dash-card-icon">◔</span>
+                    <div class="dash-card-title">Analytics</div>
+                    <div class="dash-card-desc">Spending breakdown</div>
+                </div>
+            </a>
+
+            <a href="/calendar">
+                <div class="dash-card">
+                    <span class="dash-card-icon">▦</span>
+                    <div class="dash-card-title">Calendar View</div>
+                    <div class="dash-card-desc">Browse by day</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <footer>
+        Smart Expense Tracker &copy; 2026
+    </footer>
 
 </body>
 </html>

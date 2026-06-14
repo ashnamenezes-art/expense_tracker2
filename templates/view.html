@@ -1,70 +1,165 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>View Expenses</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Expenses — Smart Expense Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+
     <div class="header">
-      <h1>Smart Expense Tracker</h1>
+        <h1>Smart Expense Tracker</h1>
+    </div>
+
+    <div class="page-title">
+        <h2>All Expenses</h2>
+        <p class="page-subtitle">Search or browse your records</p>
     </div>
 
     <div class="card">
 
-    <h2>All Expenses</h2>
-    <form class="search-form" method="GET" action="/view">
-    <input type="text"
-           name="search"
-           placeholder="Search by category or description...">
-        <br><br>
-    <button type="submit">Search</button>
-     <a href="/view">
-        <button type="button">Show All</button>
-    </a>
+        <form class="search-form" method="GET" action="/view">
+            <input type="text" name="search" placeholder="Search category or description...">
+            <button type="submit">Search</button>
+            <a href="/view">
+                <button type="button" class="btn-outline">Clear</button>
+            </a>
+        </form>
 
-    </form>
-<br>
-
-<br>
-
-    <table border="1" cellpadding="10">
-
-        <tr>
-            <th>ID</th>
-            <th>Amount</th>
-            <th>Category</th>
-            <th>Date</th>
-            <th>Description</th>
-            <th>Action</th>
-        </tr>
-
-     {% for row in data %}
-        <tr>
-           <td>{{ loop.index }}</td>
-           <td>{{ row[1] }}</td>
-           <td>{{ row[2] }}</td>
-           <td>{{ row[3] }}</td>
-           <td>{{ row[4] }}</td>
-
-        <td>
-         <a href="/delete/{{ row[0] }}">
-           <button>Delete</button>
-         </a>
-        </td>
-        </tr>
-{% endfor %}
-    </table>
-
-    <br>
-    
-    <a href="/">
-    <button>Back to Home</button>
-    </a>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Amount</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>₹{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                    <td>{{ row[3] }}</td>
+                    <td>{{ row[4] }}</td>
+                    <td>
+                        <button type="button" class="btn-danger btn-delete-trigger"
+                                data-id="{{ row[0] }}"
+                                data-amount="₹{{ row[1] }}"
+                                data-category="{{ row[2] }}"
+                                data-date="{{ row[3] }}"
+                                data-desc="{{ row[4] }}">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not data %}
+                <tr>
+                    <td colspan="6" style="text-align:center; color: var(--text-faint); padding: 24px;">
+                        No expenses yet.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
 
     </div>
 
-<footer>
-    Smart Expense Tracker © 2026
-</footer>
+    <div class="nav-bottom">
+        <a href="/">
+            <button class="btn-outline">&larr; Back</button>
+        </a>
+    </div>
+
+    <footer>Smart Expense Tracker &copy; 2026</footer>
+
+    <!-- Custom Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">Delete Expense</div>
+            <div class="modal-desc">Are you sure you want to permanently delete this expense? This action cannot be undone.</div>
+            
+            <div class="modal-details">
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">Amount:</span>
+                    <span class="modal-detail-value" id="modalAmount"></span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">Category:</span>
+                    <span class="modal-detail-value" id="modalCategory"></span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">Date:</span>
+                    <span class="modal-detail-value" id="modalDate"></span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">Description:</span>
+                    <span class="modal-detail-value" id="modalDesc"></span>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-outline" id="cancelDeleteBtn">Cancel</button>
+                <form id="deleteForm" method="POST" action="">
+                    <button type="submit" class="btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('deleteModal');
+            const deleteForm = document.getElementById('deleteForm');
+            const modalAmount = document.getElementById('modalAmount');
+            const modalCategory = document.getElementById('modalCategory');
+            const modalDate = document.getElementById('modalDate');
+            const modalDesc = document.getElementById('modalDesc');
+            const cancelBtn = document.getElementById('cancelDeleteBtn');
+
+            document.querySelectorAll('.btn-delete-trigger').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const amount = this.getAttribute('data-amount');
+                    const category = this.getAttribute('data-category');
+                    const date = this.getAttribute('data-date');
+                    const desc = this.getAttribute('data-desc') || 'N/A';
+
+                    // Update modal content
+                    modalAmount.textContent = amount;
+                    modalCategory.textContent = category;
+                    modalDate.textContent = date;
+                    modalDesc.textContent = desc;
+
+                    // Update form action
+                    deleteForm.action = '/delete/' + id;
+
+                    // Open modal
+                    modal.classList.add('active');
+                });
+            });
+
+            // Close modal on cancel click
+            cancelBtn.addEventListener('click', function() {
+                modal.classList.remove('active');
+            });
+
+            // Close modal when clicking outside the modal box
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+
 </body>
 </html>
